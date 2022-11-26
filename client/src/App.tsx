@@ -1,34 +1,79 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import './App.css'
+import { useRef, useState } from 'react'
+import { v4 } from 'uuid'
+
+import BlockList from './components/BlockList'
+import './styles/App.css'
+
+export interface IBlock {
+	id: string
+	name: string
+	amount: number
+}
+
+export interface IBlocks extends Array<IBlock> {}
 
 function App() {
-  const [count, setCount] = useState(0)
+	const [blocks, setBlocks] = useState<IBlocks>([])
+	const inputRef = useRef<HTMLInputElement>(null)
 
-  return (
-    <div className="App">
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </div>
-  )
+	const addBlock = async () => {
+		const newBlock: IBlock = {
+			id: v4(),
+			name: inputRef.current?.value || '',
+			amount: 1
+		}
+		setBlocks([...blocks, newBlock])
+
+		const res = await fetch('http://localhost:5000/add', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'Access-Control-Allow-Headers': '*'
+			},
+			body: JSON.stringify(newBlock)
+		})
+
+		const data = await res.json()
+		console.log(data)
+	}
+
+	const updateBlock = (id: string, num: number) => {
+		const target = blocks[blocks.findIndex(block => block.id === id)]
+		setBlocks([
+			...blocks.filter(block => block.id !== id),
+			{
+				id: target.id,
+				name: target.name,
+				amount: num
+			}
+		])
+	}
+
+	const deleteBlock = async (id: string) => {
+		setBlocks(blocks.filter(block => block.id !== id))
+
+		const res = await fetch('http://localhost:5000/delete', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'Access-Control-Allow-Headers': '*'
+			},
+			body: JSON.stringify({
+				id: id
+			})
+		})
+
+		const data = await res.json()
+		console.log(data)
+	}
+
+	return (
+		<div className='App'>
+			<BlockList className='block-list' blockList={blocks} updateBlock={updateBlock} deleteBlock={deleteBlock}></BlockList>
+			<input type='text' ref={inputRef}></input>
+			<button onClick={addBlock}>Add a block!</button>
+		</div>
+	)
 }
 
 export default App
