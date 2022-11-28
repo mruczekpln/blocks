@@ -1,8 +1,7 @@
-import { useRef, useState } from 'react'
-import { v4 } from 'uuid'
-
+import { useState, useRef, useEffect } from 'react'
 import BlockList from './components/BlockList'
-import './styles/App.css'
+
+import { loadBlocks, addBlock, deleteBlock, updateBlock } from './fetchData'
 
 export interface IBlock {
 	id: string
@@ -13,65 +12,40 @@ export interface IBlock {
 export interface IBlocks extends Array<IBlock> {}
 
 function App() {
-	const [blocks, setBlocks] = useState<IBlocks>([])
 	const inputRef = useRef<HTMLInputElement>(null)
+	const [blocks, setBlocks] = useState<IBlocks>([])
 
-	const addBlock = async () => {
-		const newBlock: IBlock = {
-			id: v4(),
-			name: inputRef.current?.value || '',
-			amount: 1
-		}
-		setBlocks([...blocks, newBlock])
+	useEffect(() => {
+		loadBlocks()
+			.then(data => setBlocks(data))
+			.catch(err => console.log('loadBlocks ERROR', err))
+	}, [])
 
-		const res = await fetch('http://localhost:5000/add', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'Access-Control-Allow-Headers': '*'
-			},
-			body: JSON.stringify(newBlock)
-		})
-
-		const data = await res.json()
-		console.log(data)
+	function handleAddBlock() {
+		addBlock(blocks, String(inputRef.current?.value)).then(data => setBlocks(data))
 	}
 
-	const updateBlock = (id: string, num: number) => {
-		const target = blocks[blocks.findIndex(block => block.id === id)]
-		setBlocks([
-			...blocks.filter(block => block.id !== id),
-			{
-				id: target.id,
-				name: target.name,
-				amount: num
-			}
-		])
+	function handleDeleteBlock(id: string) {
+		deleteBlock(blocks, id).then(data => setBlocks(data))
 	}
 
-	const deleteBlock = async (id: string) => {
-		setBlocks(blocks.filter(block => block.id !== id))
-
-		const res = await fetch('http://localhost:5000/delete', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'Access-Control-Allow-Headers': '*'
-			},
-			body: JSON.stringify({
-				id: id
-			})
-		})
-
-		const data = await res.json()
-		console.log(data)
+	function handleUpdateBlock({ id, name, amount }: IBlock) {
+		updateBlock(blocks, id, name, amount).then(data => setBlocks(data))
+		// .then(data => setBlocks(data))
 	}
+
+	// function handleUpdateblock(id: string, num: number) {
+	// 	updateBlock(blocks, id, num).then(data => setBlocks(data))
+	// }
 
 	return (
 		<div className='App'>
-			<BlockList className='block-list' blockList={blocks} updateBlock={updateBlock} deleteBlock={deleteBlock}></BlockList>
+			<BlockList
+				className='block-list'
+				blockList={blocks}
+				blockFunctions={{ update: handleUpdateBlock, delete: handleDeleteBlock }}></BlockList>
 			<input type='text' ref={inputRef}></input>
-			<button onClick={addBlock}>Add a block!</button>
+			<button onClick={handleAddBlock}>Add a block!</button>
 		</div>
 	)
 }

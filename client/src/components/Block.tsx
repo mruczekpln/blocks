@@ -1,23 +1,28 @@
-import { useState } from 'react'
-
 import { IBlock } from '../App'
+import { MouseEventHandler } from 'react'
 
 interface BlockProps {
-	className?: string
 	block: IBlock
-	updateBlock: (id: string, num: number) => void
-	deleteBlock: (id: string) => void
+	blockFunctions: {
+		update: (block: IBlock) => void
+		delete: (id: string) => void
+	}
 }
 
-const Block = (props: BlockProps) => {
+const Block = ({ block: { id, name, amount }, blockFunctions }: BlockProps) => {
 	return (
-		<>
-			{`${props.block.name} `.repeat(props.block.amount)}
-			{props.block.id}
-			<button onClick={() => props.updateBlock(props.block.id, props.block.amount + 1)}>Add</button>
-			<button onClick={() => props.block.amount > 0 && props.updateBlock(props.block.id, props.block.amount - 1)}>Delete</button>
-			<button onClick={() => props.deleteBlock(props.block.id)}>Delete Block</button>
-		</>
+		<div className={`${id} block`}>
+			<p>
+				{'text: ' + `${name}`.repeat(amount)}
+				<br />
+				{`id: ${id}`}
+			</p>
+			<div className='actions'>
+				<button onClick={() => blockFunctions.update({ id, name, amount: amount + 1 })}>Add</button>
+				<button onClick={() => blockFunctions.update({ id, name, amount: amount - 1 })}>Delete</button>
+				<button onClick={() => blockFunctions.delete(id)}>Delete Block</button>
+			</div>
+		</div>
 	)
 }
 

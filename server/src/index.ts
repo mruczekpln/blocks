@@ -1,6 +1,8 @@
-import express from 'express'
+import express, { Request, Response } from 'express'
 import cors from 'cors'
-import { createConnection, createPool } from 'mysql2'
+import { createPool, Field, Pool, QueryError, RowDataPacket } from 'mysql2'
+import { config } from 'dotenv'
+config()
 
 interface IResponse {
 	id: string
@@ -18,50 +20,112 @@ app.use(
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-const conn = createPool({
-	host: '172.21.240.1',
-	user: 'admin',
-	password: 'norbi123',
+const conn: Pool = createPool({
+	host: process.env['MYSQL_HOST'],
+	user: 'root',
 	database: 'blocksdb'
-	// socketPath: 'C:/xampp/mysql/mysql.sock'
 })
 
-app.get('/', (req, res) => {
-	res.send(req.body)
-	console.log('success')
-})
+let result: string = ''
+function respondWithResult(message: string, res: Response, req?: Request) {
+	res.send(JSON.stringify({ result: message }))
+	console.log(message, `from ip: ${req?.ip}`)
+}
 
-app.post('/add', (req, res) => {
-	const data = req.body || {}
-	console.log(`added with id: ${data.id}`)
-
+app.get('/', (req: Request, res: Response) => {
 	conn.getConnection((err, connection) => {
-		if (err) throw err
-		connection.query(`INSERT INTO block (id, name, amount) VALUES ("${data.id}", "${data.name}", ${data.amount})`)
+		if (err) {
+			respondWithResult(err.code!, res)
+			throw err
+		}
+
+		connection.query('SELECT * FROM block', (err: QueryError, rows: RowDataPacket[]) => {
+			if (err) {
+				result = err?.message || 'query problem'
+				respondWithResult(result, res)
+				throw err
+			}
+
+			res.send(rows)
+		})
+
+		// result = `connection established with database ${connection.threadId}`
+		// respondWithResult(result, res, req)
 		connection.release()
 	})
+})
 
-	res.json({
-		block_id: data.id,
-		operation: 'add',
-		success: true
+app.post('/add', (req: Request, res: Response) => {
+	const { id, name, amount } = req.body
+
+	conn.getConnection((err, connection) => {
+		if (err) {
+			result = `ERROR: couldnt add with id: ${id}, err code: ${err.code}`
+			// res.send(result)
+			respondWithResult(result, res)
+			throw err
+		}
+
+		connection.query(`INSERT INTO block (id, name, amount) VALUES ("${id}", "${name}", ${amount})`, err => {
+			if (err) {
+				result = err?.message || 'query problem'
+				respondWithResult(result, res)
+				throw err
+			}
+		})
+		connection.release()
+
+		result = `added with id: ${id}`
+		respondWithResult(result, res, req)
 	})
 })
 
-app.post('/delete', (req, res) => {
-	const id = req.body.id || ''
-	console.log(`deleted with id: ${id}`)
+app.post('/delete', (req: Request, res: Response) => {
+	const { id } = req.body
 
 	conn.getConnection((err, connection) => {
-		if (err) throw err
-		connection.query(`DELETE FROM block WHERE id = "${id}"`)
-		connection.release()
-	})
+		if (err) {
+			result = `ERROR: couldnt add with id: ${id}, err code: ${err.code}`
+			respondWithResult(result, res)
+			throw err
+		}
 
-	res.json({
-		block_id: id,
-		operation: 'delete',
-		success: true
+		connection.query(`DELETE FROM block WHERE id = "${id}"`, err => {
+			if (err) {
+				result = err?.message || 'query problem'
+				respondWithResult(result, res)
+				throw err
+			}
+		})
+		connection.release()
+
+		result = `deleted with id: ${id}`
+		respondWithResult(result, res, req)
+	})
+})
+
+app.post('/update', (req: Request, res: Response) => {
+	const { id, name, amount } = req.body
+
+	conn.getConnection((err, connection) => {
+		if (err) {
+			result = 'conn err'
+			respondWithResult(result, res)
+			throw err
+		}
+
+		connection.query(`UPDATE block SET name="${name}", amount=${amount} WHERE id="${id}"`, err => {
+			if (err) {
+				result = 'query problem'
+				respondWithResult(result, res)
+				throw err
+			}
+		})
+
+		connection.release()
+
+		result = `updated with id: ${id}`
+		respondWithResult(result, res, req)
 	})
 })
 

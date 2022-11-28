@@ -2,21 +2,33 @@ import Block from './Block'
 
 import { IBlocks } from '../App'
 import { IBlock } from '../App'
+import { MouseEventHandler } from 'react'
 
 interface BlockListProps {
 	className?: string
 	blockList: IBlocks
-	updateBlock: (id: string, num: number) => void
-	deleteBlock: (id: string) => void
+	blockFunctions: {
+		update: ({}: IBlock) => void
+		delete: (id: string) => void
+	}
 }
 
-const BlockList = (props: BlockListProps) => {
+const BlockList = ({ blockList, blockFunctions }: BlockListProps) => {
 	return (
-		<>
-			{props.blockList.map((block: IBlock) => {
-				return <Block key={block.id} block={block} updateBlock={props.updateBlock} deleteBlock={props.deleteBlock}></Block>
+		<div className='block-list'>
+			{blockList.map((block: IBlock) => {
+				return (
+					<Block
+						key={block.id}
+						block={block}
+						blockFunctions={{
+							update: blockFunctions.update,
+							delete: blockFunctions.delete
+						}}
+					/>
+				)
 			})}
-		</>
+		</div>
 	)
 }
 
