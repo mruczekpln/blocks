@@ -1,17 +1,30 @@
-import { IBlock, IBlocks } from './App'
+import { IBlock, IBlocks, ILoginCredentials } from './App'
 import { v4 } from 'uuid'
-import { resolve } from 'path'
 
-async function loadBlocks() {
-	const res = await fetch('http://localhost:5000', {
-		// headers: {
-		// 	'Content-Type': 'application/json',
-		// 	'Access-Control-Allow-Headers': '*'
-		// }
+async function logIn(credentials: ILoginCredentials) {
+	const res = await fetch('http://localhost:5000/login', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			'Access-Control-Allow-Headers': '*'
+		},
+		body: JSON.stringify(credentials)
 	})
+
 	const data = await res.json()
 	console.log(data)
-	return [...data]
+	return data
+}
+
+async function loadBlocks() {
+	const res = await fetch('http://localhost:5000/load', {
+		method: 'POST'
+	})
+
+	console.log(res)
+	const data = await res.json()
+	console.log(data)
+	return data
 }
 
 async function addBlock(blocks: IBlocks, name: string) {
@@ -45,10 +58,11 @@ async function updateBlock(blocks: IBlocks, id: string, name: string, num: numbe
 	}
 
 	const res = await fetch('http://localhost:5000/update', {
-		method: 'POST',
+		method: 'PUT',
 		headers: {
 			'Content-Type': 'application/json',
-			'Access-Control-Allow-Headers': '*'
+			'Access-Control-Allow-Headers': '*',
+			'Access-Control-Allow-Methods': 'PUT'
 		},
 		body: JSON.stringify(newBlock)
 	})
@@ -61,7 +75,7 @@ async function updateBlock(blocks: IBlocks, id: string, name: string, num: numbe
 
 async function deleteBlock(blocks: IBlocks, id: string) {
 	const res = await fetch('http://localhost:5000/delete', {
-		method: 'POST',
+		method: 'DELETE',
 		headers: {
 			'Content-Type': 'application/json',
 			'Access-Control-Allow-Headers': '*'
@@ -77,4 +91,4 @@ async function deleteBlock(blocks: IBlocks, id: string) {
 	return blocks.filter(block => block.id !== id)
 }
 
-export { loadBlocks, addBlock, updateBlock, deleteBlock }
+export { logIn, loadBlocks, addBlock, updateBlock, deleteBlock }
