@@ -1,7 +1,7 @@
 import Block from './Block'
 
-import { IBlocks } from '../App'
-import { IBlock } from '../App'
+import { IBlocks } from '../routes/root'
+import { IBlock } from '../routes/root'
 import { MouseEventHandler } from 'react'
 
 interface BlockListProps {

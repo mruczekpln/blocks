@@ -1,7 +1,7 @@
 import { Response, Request } from 'express'
 import { conn } from '../index'
 
-export const addBlock = async (req: Request, res: Response, userId: number) => {
+export const addBlock = async (req: Request, res: Response, userId: number | null) => {
 	const { id, name, amount } = req.body
 	console.log('addblock', userId)
 

@@ -1,4 +1,4 @@
-import { IBlock } from '../App'
+import { IBlock } from '../routes/root'
 import { MouseEventHandler } from 'react'
 
 interface BlockProps {

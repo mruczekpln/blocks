@@ -7,31 +7,38 @@ config()
 import { LogIn } from './api/LogIn'
 import { loadData } from './api/LoadData'
 import { addBlock } from './api/AddBlock'
+import { deleteBlock } from './api/DeleteBlock'
+import { updateBlock } from './api/UpdateBlock'
+import { LogOut } from './api/LogOut'
+import { Register } from './api/Register'
 
 const app = express()
 
 app.use(
 	cors({
-		origin: '*'
+		origin: '*',
+		allowedHeaders: '*'
 	})
 )
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
+const { MYSQL_HOST, MYSQL_USERNAME, PORT } = process.env
+
 export const conn = createPool({
-	host: process.env['MYSQL_HOST'],
-	user: 'root',
+	host: MYSQL_HOST,
+	user: MYSQL_USERNAME,
 	database: 'blocksdb'
 })
 
-let userId: number
+let userId: number | null
 app.post('/login', (req: Request, res: Response) => LogIn(req, res).then(id => (userId = id)))
-app.post('/load', (res: Response) => loadData(res, userId))
+app.get('/logout', () => (userId = LogOut()))
+app.post('/register', (req: Request, res: Response) => Register(req, res))
+app.post('/load', (req: Request, res: Response) => loadData(req, res, userId))
 app.post('/add', (req: Request, res: Response) => addBlock(req, res, userId))
+app.delete('/delete', (req: Request, res: Response) => deleteBlock(req, res))
+app.options('/update', cors())
+app.put('/update', (req: Request, res: Response) => updateBlock(req, res))
 
-// app.delete('/delete', (req: Request, res: Response) => deleteBlock(req, res))
-
-// app.options('/update', cors())
-// app.put('/update', (req: Request, res: Response) => updateBlock(req, res))
-
-app.listen(5000)
+app.listen(PORT)

@@ -1,5 +1,6 @@
-import { IBlock, IBlocks, ILoginCredentials } from './App'
 import { v4 } from 'uuid'
+import { IBlock, IBlocks } from './routes/root'
+import { ILoginCredentials } from './routes/login'
 
 async function logIn(credentials: ILoginCredentials) {
 	const res = await fetch('http://localhost:5000/login', {
@@ -13,7 +14,28 @@ async function logIn(credentials: ILoginCredentials) {
 
 	const data = await res.json()
 	console.log(data)
-	return data
+
+	if (data?.success) return data.success
+}
+
+async function logOut() {
+	fetch('http://localhost:5000/logout').then(() => console.log('successfully logged out'))
+}
+
+async function register(credentials: ILoginCredentials) {
+	const res = await fetch('http://localhost:5000/register', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			'Access-Control-Allow-Headers': '*'
+		},
+		body: JSON.stringify(credentials)
+	})
+
+	const data = await res.json()
+	console.log(data)
+
+	if (data.success) return data.success
 }
 
 async function loadBlocks() {
@@ -24,7 +46,9 @@ async function loadBlocks() {
 	console.log(res)
 	const data = await res.json()
 	console.log(data)
-	return data
+
+	if (data?.success) return data
+	else return false
 }
 
 async function addBlock(blocks: IBlocks, name: string) {
@@ -91,4 +115,4 @@ async function deleteBlock(blocks: IBlocks, id: string) {
 	return blocks.filter(block => block.id !== id)
 }
 
-export { logIn, loadBlocks, addBlock, updateBlock, deleteBlock }
+export { logIn, logOut, register, loadBlocks, addBlock, updateBlock, deleteBlock }
