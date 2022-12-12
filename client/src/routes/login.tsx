@@ -24,9 +24,9 @@ export default function LogIn() {
 
 		logIn(credentials)
 			.then(data => {
-				if (data) {
-					console.log('redirecting')
-					navigate('/')
+				if (data?.success) {
+					if (data.admin) navigate('/admin')
+					else navigate('/')
 				} else console.log('not logged in')
 			})
 			.catch(err => console.log('LOGIN ERR', err))

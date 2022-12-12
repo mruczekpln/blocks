@@ -66,6 +66,7 @@ export default function Root() {
 						<>
 							<BlockList
 								className='block-list'
+								onAdmin={false}
 								blockList={blocks}
 								blockFunctions={{ update: handleUpdateBlock, delete: handleDeleteBlock }}></BlockList>
 						</>

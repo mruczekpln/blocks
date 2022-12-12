@@ -15,7 +15,7 @@ async function logIn(credentials: ILoginCredentials) {
 	const data = await res.json()
 	console.log(data)
 
-	if (data?.success) return data.success
+	if (data.success) return data
 }
 
 async function logOut() {
