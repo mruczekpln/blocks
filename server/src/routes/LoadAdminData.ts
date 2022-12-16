@@ -1,7 +1,7 @@
 import { conn } from '..'
-import { Response } from 'express'
+import { Request, Response } from 'express'
 
-export default async function LoadAdminData(res: Response) {
+export default async function LoadAdminData(req: Request, res: Response) {
 	const [users]: any = await conn.execute('SELECT * FROM user')
 	console.log(users)
 
@@ -12,6 +12,8 @@ export default async function LoadAdminData(res: Response) {
 			return { ...item, rows }
 		})
 	)
+
+	console.log(data)
 
 	res.send(data)
 }

@@ -1,8 +1,8 @@
-import { useState, useRef, useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import BlockList from '../components/BlockList'
 
-import { loadBlocks, addBlock, deleteBlock, updateBlock, logOut } from '../fetchData'
+import { addBlock, deleteBlock, loadBlocks, logOut, updateBlock } from '../fetchData'
 
 export interface IBlock {
 	id: string
@@ -13,9 +13,10 @@ export interface IBlock {
 export interface IBlocks extends Array<IBlock> {}
 
 export default function Root() {
+	const [blocks, setBlocks] = useState<IBlocks>([])
 	const [loggedIn, setLoggedIn] = useState<boolean>(false)
 	const inputRef = useRef<HTMLInputElement>(null)
-	const [blocks, setBlocks] = useState<IBlocks>([])
+	const promptRef = useRef('not logged in')
 
 	const navigate = useNavigate()
 
@@ -23,69 +24,91 @@ export default function Root() {
 		handleLoadBlocks()
 	}, [])
 
+	const handleTokenExpiration = (data: any) => {
+		console.log('data in handletoken expiration', JSON.stringify(data))
+		if (!data.result.success) {
+			promptRef.current = 'your session expired, if you want to continiue log in again'
+			setLoggedIn(false)
+			// document.cookie = String(document.cookie.split(';').filter(key => !key.includes('token')))
+			return
+		}
+
+		return data.data
+	}
+
 	async function handleLoadBlocks() {
-		loadBlocks().then(data => {
-			console.log(data.success)
-			if (!data.success) {
-				setLoggedIn(false)
-				return
-			}
+		if (document.cookie.includes('token')) {
 			setLoggedIn(true)
-			setBlocks(data.data)
-		})
+			loadBlocks().then(data => {
+				// console.log('setted blocks', typeof setBlocks)
+				setBlocks(data.data)
+			})
+		} else {
+			setLoggedIn(false)
+		}
+	}
+
+	const handleAddBlock = async (name: string) => {
+		addBlock(blocks, name)
+			.then(data => handleTokenExpiration(data))
+			.then(data => setBlocks(data))
+	}
+
+	const handleUpdateBlock = async ({ id, name, amount }: IBlock) => {
+		if (amount >= 0) {
+			const newBlock: IBlock = {
+				id: id,
+				name: name,
+				amount: amount
+			}
+
+			updateBlock(blocks, newBlock)
+				.then(data => handleTokenExpiration(data))
+				.then(data => setBlocks(data))
+		}
+	}
+
+	const handleDeleteBlock = async (id: string) => {
+		deleteBlock(blocks, id)
+			.then(data => handleTokenExpiration(data))
+			.then(data => setBlocks(data))
 	}
 
 	function handleLogOut() {
-		logOut()
-		navigate('login')
-	}
-
-	function handleAddBlock() {
-		addBlock(blocks, String(inputRef.current?.value))
-			.then(data => setBlocks(data))
-			.catch(err => console.log('ADDBLOCK ERR', err))
-	}
-
-	function handleDeleteBlock(id: string) {
-		deleteBlock(blocks, id)
-			.then(data => setBlocks(data))
-			.catch(err => console.log('DELETEBLOCK ERR', err))
-	}
-
-	function handleUpdateBlock({ id, name, amount }: IBlock) {
-		updateBlock(blocks, id, name, amount)
-			.then(data => setBlocks(data))
-			.catch(err => console.log('UPDATEBLOCK ERR', err))
+		logOut().then(data => {
+			console.log(data)
+			document.cookie = String(document.cookie.split(';').filter(key => !key.includes('token')))
+			navigate('login')
+		})
 	}
 
 	return (
 		<div className='App'>
-			{loggedIn ? (
-				<>
-					{blocks.length > 0 ? (
+			<main>
+				<div className='main-blocks'>
+					{loggedIn ? (
 						<>
 							<BlockList
 								className='block-list'
 								onAdmin={false}
-								blockList={blocks}
+								blocks={blocks}
 								blockFunctions={{ update: handleUpdateBlock, delete: handleDeleteBlock }}></BlockList>
+
+							<input type='text' ref={inputRef} placeholder='block name'></input>
+							<button onClick={() => handleAddBlock(inputRef.current!.value)}>Add a block!</button>
+							<button onClick={handleLogOut}>Log out</button>
 						</>
 					) : (
-						<div>no blocks</div>
-					)}
+						<>
+							<div>{promptRef.current}</div>
 
-					<input type='text' ref={inputRef}></input>
-					<button onClick={handleAddBlock}>Add a block!</button>
-					<button onClick={handleLogOut}>Log out</button>
-				</>
-			) : (
-				<>
-					<div>not logged in</div>
-					<Link to={'/login'}>
-						<button>Log In</button>
-					</Link>
-				</>
-			)}
+							<Link to={'/login'}>
+								<button>Log In</button>
+							</Link>
+						</>
+					)}
+				</div>
+			</main>
 		</div>
 	)
 }

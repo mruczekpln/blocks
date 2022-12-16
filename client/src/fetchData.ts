@@ -1,25 +1,30 @@
+import { useNavigate } from 'react-router-dom'
 import { v4 } from 'uuid'
 import { IBlock, IBlocks } from './routes/root'
 import { ILoginCredentials } from './routes/login'
+import axios from 'axios'
 
 async function logIn(credentials: ILoginCredentials) {
-	const res = await fetch('http://localhost:5000/login', {
-		method: 'POST',
+	const { data } = await axios.post('http://localhost:5000/login', credentials, {
 		headers: {
+			'Accept': 'application/json',
 			'Content-Type': 'application/json',
-			'Access-Control-Allow-Headers': '*'
+			'Access-Control-Allow-Headers': '*',
+			'Access-Control-Allow-Credentials': 'true'
 		},
-		body: JSON.stringify(credentials)
+		withCredentials: true
 	})
 
-	const data = await res.json()
-	console.log(data)
+	console.log('login', data)
 
 	if (data.success) return data
 }
 
 async function logOut() {
-	fetch('http://localhost:5000/logout').then(() => console.log('successfully logged out'))
+	const { data } = await axios.get('http://localhost:5000/logout', {
+		withCredentials: true
+	})
+	return data
 }
 
 async function register(credentials: ILoginCredentials) {
@@ -39,18 +44,23 @@ async function register(credentials: ILoginCredentials) {
 }
 
 async function loadBlocks() {
-	const res = await fetch('http://localhost:5000/load', {
-		method: 'POST'
+	const { data } = await axios.post('http://localhost:5000/load', null, {
+		withCredentials: true
 	})
-
-	console.log(res)
-	const data = await res.json()
 	console.log(data)
 
 	if (data?.success) return data
 	else return false
 }
 
+async function fetchAdminData() {
+	const { data } = await axios.post('http://localhost:5000/admin', null, {
+		withCredentials: true
+	})
+	console.log(data)
+
+	return data
+}
 async function addBlock(blocks: IBlocks, name: string) {
 	const newBlock: IBlock = {
 		id: v4(),
@@ -58,61 +68,56 @@ async function addBlock(blocks: IBlocks, name: string) {
 		amount: 1
 	}
 
-	const res = await fetch('http://localhost:5000/add', {
-		method: 'POST',
+	const { data } = await axios.post('http://localhost:5000/add', newBlock, {
 		headers: {
-			'Content-Type': 'application/json',
-			'Access-Control-Allow-Headers': '*'
-		},
-		body: JSON.stringify(newBlock)
-	})
-
-	const data = await res.json()
-	console.log(data)
-
-	return [...blocks, newBlock]
-}
-
-async function updateBlock(blocks: IBlocks, id: string, name: string, num: number) {
-	const target = blocks[blocks.findIndex(block => block.id === id)]
-	const newBlock: IBlock = {
-		id: target.id,
-		name: name,
-		amount: num
-	}
-
-	const res = await fetch('http://localhost:5000/update', {
-		method: 'PUT',
-		headers: {
+			'Accept': 'application/json',
 			'Content-Type': 'application/json',
 			'Access-Control-Allow-Headers': '*',
-			'Access-Control-Allow-Methods': 'PUT'
+			'Access-Control-Allow-Credentials': 'true'
 		},
-		body: JSON.stringify(newBlock)
+		withCredentials: true
 	})
 
-	const data = await res.json()
 	console.log(data)
 
-	return [...blocks.filter(block => block.id !== id), newBlock]
+	return { result: data, data: [...blocks, newBlock] }
+}
+
+async function updateBlock(blocks: IBlocks, newBlock: IBlock) {
+	const { data } = await axios.put('http://localhost:5000/update', newBlock, {
+		headers: {
+			'Accept': 'application/json',
+			'Content-Type': 'application/json',
+			'Access-Control-Allow-Headers': '*',
+			'Access-Control-Allow-Credentials': 'true'
+		},
+		withCredentials: true
+	})
+
+	console.log(data)
+	return {
+		result: data,
+		data: [...blocks.map(block => (block.id !== newBlock.id ? block : newBlock))]
+	}
 }
 
 async function deleteBlock(blocks: IBlocks, id: string) {
-	const res = await fetch('http://localhost:5000/delete', {
-		method: 'DELETE',
+	const { data } = await axios.delete('http://localhost:5000/delete', {
 		headers: {
+			'Accept': 'application/json',
 			'Content-Type': 'application/json',
-			'Access-Control-Allow-Headers': '*'
+			'Access-Control-Allow-Headers': '*',
+			'Access-Control-Allow-Credentials': 'true'
 		},
-		body: JSON.stringify({
-			id: id
-		})
+		data: { id: id },
+		withCredentials: true
 	})
 
-	const data = await res.json()
 	console.log(data)
 
-	return blocks.filter(block => block.id !== id)
+	console.log(id)
+	console.log(blocks)
+	return { result: data, data: [...blocks.filter(block => block.id !== id)] }
 }
 
-export { logIn, logOut, register, loadBlocks, addBlock, updateBlock, deleteBlock }
+export { logIn, logOut, register, loadBlocks, addBlock, updateBlock, deleteBlock, fetchAdminData }

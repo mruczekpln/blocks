@@ -1,4 +1,4 @@
-import { FormEvent, useRef } from 'react'
+import { FormEvent, useEffect, useInsertionEffect, useRef } from 'react'
 import { logIn } from '../fetchData'
 
 import { Link, useNavigate } from 'react-router-dom'
@@ -13,6 +13,10 @@ export default function LogIn() {
 	const passwordRef = useRef<HTMLInputElement>(null)
 
 	const navigate = useNavigate()
+
+	useEffect(() => {
+		// if (document.cookie.includes('token')) navigate('/')
+	}, [])
 
 	async function handleLogIn(e: FormEvent) {
 		const credentials: ILoginCredentials = {
@@ -33,16 +37,24 @@ export default function LogIn() {
 	}
 
 	return (
-		<>
+		<main>
+			<h3>LogIn Page</h3>
 			<form className='login-form' onSubmit={handleLogIn}>
-				<input type='text' ref={usernameRef} />
-				<input type='password' ref={passwordRef} />
-				<button type='submit'>login</button>
-			</form>
+				<input type='text' name='username' placeholder='username' ref={usernameRef} />
+				<input type='password' name='password' placeholder='password' ref={passwordRef} />
 
-			<Link to='/register'>
-				<button>Register</button>
-			</Link>
-		</>
+				<div>
+					<button type='submit'>Login</button>
+					<Link to='/register'>
+						<button
+							style={{
+								width: '100%'
+							}}>
+							Register
+						</button>
+					</Link>
+				</div>
+			</form>
+		</main>
 	)
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import BlockList from '../components/BlockList'
+import { fetchAdminData } from '../fetchData'
 import { deleteBlock, updateBlock } from '../fetchData'
 import { IBlock } from './root'
 
@@ -11,44 +12,45 @@ export default function AdminDashboard() {
 	const navigate = useNavigate()
 
 	useEffect(() => {
-		fetchAdminData().then(data => setData(data))
-		console.log('useeffect')
+		console.log(document.cookie)
+		handleFetchAdminData()
 	}, [])
 
-	async function fetchAdminData() {
-		const res = await fetch('http://localhost:5000/admin', {
-			method: 'POST'
-		})
-
-		const data = await res.json()
-		console.log(data)
-
-		return data
+	const handleFetchAdminData = async () => {
+		fetchAdminData().then(data => setData(data))
 	}
 
 	function handleDeleteBlock(id: string) {
-		deleteBlock([], id)
-		navigate('/admin')
+		deleteBlock([], id).then(() => handleFetchAdminData())
 	}
+
+	// const handleDeleteBlock = async (id: string) => {
+	// 	deleteBlock(blocks, id)
+	// 		.then(data => handleTokenExpiration(data))
+	// 		.then(data => setBlocks(data))
+	// }
+
 	function handleUpdateBlock({ id, name, amount }: IBlock) {
-		updateBlock([], id, name, amount)
-		navigate('/admin')
+		// updateBlock([], id, name, amount)
+		// navigate('/admin')
 	}
 
 	return (
-		<div>
+		<main>
 			<h1>Admin Dashboard</h1>
 
 			{data.map((item: any) => (
-				<div>
+				<div
+					// className='admin-user'
+					className='main-blocks'>
 					<h2>{item.username}</h2>
 					<BlockList
 						className='block-list'
 						onAdmin={true}
-						blockList={item.rows}
+						blocks={item.rows}
 						blockFunctions={{ update: handleUpdateBlock, delete: handleDeleteBlock }}></BlockList>
 				</div>
 			))}
-		</div>
+		</main>
 	)
 }

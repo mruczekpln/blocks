@@ -1,31 +1,25 @@
-import { IBlock } from '../routes/root'
-import { MouseEventHandler } from 'react'
+import { IBlock, IBlocks } from '../routes/root'
+import { IBlockFunctions } from './BlockList'
+import { BlockActions } from './BlockActions'
 
 interface BlockProps {
 	onAdmin: boolean
 	block: IBlock
-	blockFunctions: {
-		update: (block: IBlock) => void | any
-		delete: (id: string) => void | any
-	}
+	blockFunctions: IBlockFunctions
 }
 
-const Block = ({ onAdmin, block: { id, name, amount }, blockFunctions }: BlockProps) => {
+const Block = ({ onAdmin, block, blockFunctions }: BlockProps) => {
+	const { id, name, amount } = block
 	return (
 		<div className={`${id} block`}>
-			<p>
-				{'text: ' + `${name}`.repeat(amount)}
-				<br />
-				{`id: ${id}`}
-			</p>
+			<p>{'text: ' + `${name}`.repeat(amount)}</p>
+			<p className='block-id'>{`id: ${id}`}</p>
 			<div className='actions'>
-				{!onAdmin && (
-					<>
-						<button onClick={() => blockFunctions.update({ id, name, amount: amount + 1 })}>Add</button>
-						<button onClick={() => blockFunctions.update({ id, name, amount: amount - 1 })}>Delete</button>
-					</>
+				{!onAdmin ? (
+					<BlockActions block={block} blockFunctions={blockFunctions} />
+				) : (
+					<button onClick={() => blockFunctions.delete(id)}>Delete Block</button>
 				)}
-				<button onClick={() => blockFunctions.delete(id)}>Delete Block</button>
 			</div>
 		</div>
 	)
