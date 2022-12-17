@@ -5,7 +5,9 @@
 3. w katalogu 'server' stworz sobie plik .env
 4. do pliku .env wklej to co ci napisze na komore
 5. w obu podfolderach 
-	- uruchom komende 'npm i'
-	- uruchom komende 'npm run dev'
-
+	- uruchom komendy
+```
+    npm i 
+    npm run dev
+```
 ## dzialaaaa
