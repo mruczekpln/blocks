@@ -24,20 +24,18 @@ async function logOut() {
 	const { data } = await axios.get('http://localhost:5000/logout', {
 		withCredentials: true
 	})
+
 	return data
 }
 
 async function register(credentials: ILoginCredentials) {
-	const res = await fetch('http://localhost:5000/register', {
-		method: 'POST',
+	const { data } = await axios.post('http://localhost:5000/register', credentials, {
 		headers: {
 			'Content-Type': 'application/json',
 			'Access-Control-Allow-Headers': '*'
-		},
-		body: JSON.stringify(credentials)
+		}
 	})
 
-	const data = await res.json()
 	console.log(data)
 
 	if (data.success) return data.success
@@ -47,6 +45,7 @@ async function loadBlocks() {
 	const { data } = await axios.post('http://localhost:5000/load', null, {
 		withCredentials: true
 	})
+
 	console.log(data)
 
 	if (data?.success) return data

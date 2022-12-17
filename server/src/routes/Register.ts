@@ -5,7 +5,7 @@ export const Register = async (req: Request, res: Response) => {
 	const credentials = req.body
 
 	try {
-		conn.execute(`INSERT INTO user (username, password) VALUES ("${credentials.username}", "${credentials.password}")`)
+		await conn.execute(`INSERT INTO user (username, password) VALUES ("${credentials.username}", "${credentials.password}")`)
 	} catch (err) {
 		console.log(err)
 	}
